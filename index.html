@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrollytelling Narrative - Final</title>
+    <title>Scrollytelling Prototype - Mobile Responsive</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #f8f9fa; font-family: "Myriad Pro", "Segoe UI", sans-serif; }
-        .container { display: flex; height: 100vh; width: 100vw; }
         
-        .chart-viewport { flex: 2; display: flex; align-items: center; justify-content: center; padding: 30px; }
+        /* Desktop Default: Side by Side */
+        .container { display: flex; height: 100vh; width: 100vw; flex-direction: row; }
+        
+        .chart-viewport { flex: 2; display: flex; align-items: center; justify-content: center; padding: 30px; background: #eef1f5; position: relative; z-index: 2; }
         .chart-card { width: 100%; max-width: 1150px; background: white; padding: 35px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
-        svg { width: 100%; height: auto; }
+        svg { width: 100%; height: auto; display: block; }
 
         /* --- Bars & Grid --- */
         .viz-bar { transition: fill 0.6s ease, opacity 0.6s ease, y 0.8s ease, height 0.8s ease; fill: #961f46; }
@@ -44,8 +46,8 @@
         .week-num { font-size: 14px; font-weight: bold; fill: #444; text-anchor: middle; transition: 0.4s; }
         .highlight-week { font-size: 20px !important; fill: #961f46 !important; }
 
-        /* --- Rail --- */
-        .rail { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; background: #ffffff; border-left: 1px solid #ddd; }
+        /* --- Rail (Desktop) --- */
+        .rail { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; background: #ffffff; border-left: 1px solid #ddd; position: relative; z-index: 10; }
         .text-block { height: 100vh; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; padding: 0 40px; }
         .content-box { 
             padding: 30px; border-radius: 6px; border-left: 5px solid #eee; 
@@ -59,6 +61,49 @@
             display: block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;
         }
         .content-box p { line-height: 1.7; color: #444; margin: 0; font-size: 1.1rem; }
+
+        /* --- MOBILE LAYOUT (Stack Top/Bottom) --- */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            
+            /* Top Half: Chart */
+            .chart-viewport {
+                flex: none; /* Disable flex growing */
+                height: 50vh; /* Exactly half height */
+                width: 100%;
+                padding: 10px; /* Reduce padding */
+                background: white;
+                border-bottom: 1px solid #ddd;
+            }
+            .chart-card {
+                padding: 10px; /* Maximize SVG space */
+                box-shadow: none;
+                max-width: 100%;
+            }
+
+            /* Bottom Half: Scroller */
+            .rail {
+                flex: none;
+                height: 50vh; /* Remaining half */
+                width: 100%;
+                border-left: none;
+            }
+            /* Adjust text blocks to fit the half-height scroll */
+            .text-block {
+                height: 50vh; /* Match the rail height for snapping */
+                padding: 0 20px;
+            }
+            .content-box {
+                padding: 20px;
+                border-left-width: 4px;
+                font-size: 0.9rem;
+            }
+            .content-box p { font-size: 1rem; line-height: 1.4; }
+            
+            /* SVG Text Adjustments for small screens */
+            .stat-large { font-size: 42px; }
+            .stat-desc { font-size: 16px; }
+        }
     </style>
 </head>
 <body>
