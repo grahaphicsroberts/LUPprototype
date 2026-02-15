@@ -3,19 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrollytelling Prototype - Mobile Responsive</title>
+    <title>Scrollytelling Prototype - Filtered Data</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #f8f9fa; font-family: "Myriad Pro", "Segoe UI", sans-serif; }
+        .container { display: flex; height: 100vh; width: 100vw; }
         
-        /* Desktop Default: Side by Side */
-        .container { display: flex; height: 100vh; width: 100vw; flex-direction: row; }
-        
-        .chart-viewport { flex: 2; display: flex; align-items: center; justify-content: center; padding: 30px; background: #eef1f5; position: relative; z-index: 2; }
+        .chart-viewport { flex: 2; display: flex; align-items: center; justify-content: center; padding: 30px; }
         .chart-card { width: 100%; max-width: 1150px; background: white; padding: 35px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
-        svg { width: 100%; height: auto; display: block; }
+        svg { width: 100%; height: auto; }
 
-        /* --- Bars & Grid --- */
-        .viz-bar { transition: fill 0.6s ease, opacity 0.6s ease, y 0.8s ease, height 0.8s ease; fill: #961f46; }
+        /* --- Bars Styles --- */
+        .viz-bar { 
+            transition: height 0.6s ease-out, y 0.6s ease-out; 
+            stroke: none;
+        }
+        .viz-bar.interactive-mode {
+            transition: fill 0.6s ease, opacity 0.6s ease, y 0.8s ease, height 0.8s ease;
+        }
+
+        .bar-measurement { fill: #ff8c00; }
+        .bar-intermediate { fill: #961f46; }
+        .faded-bar { fill: #ccc !important; opacity: 0.2; }
+
+        /* --- Trend Line --- */
+        #trend-line {
+            fill: none;
+            stroke: #ff8c00;
+            stroke-width: 4px;
+            opacity: 1;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: stroke-dashoffset 1s linear; 
+        }
+        #trend-line.interactive-mode {
+            transition: d 0.8s ease, opacity 0.8s ease;
+        }
+
+        /* --- Injection Lines --- */
+        .inj-line { stroke: #961f46; stroke-width: 2px; stroke-dasharray: 5, 5; opacity: 0; transition: opacity 0.6s ease; }
+
+        /* Grid */
         .grid-line { transition: y1 0.8s ease, y2 0.8s ease, opacity 0.8s ease, stroke 0.6s ease, stroke-width 0.6s ease; stroke: #961f46; stroke-width: 0.3; opacity: 0.2; }
 
         /* --- Overlays --- */
@@ -27,82 +54,42 @@
         .injection-label { font-size: 16px; font-weight: 800; fill: #961f46; text-transform: uppercase; letter-spacing: 0.5px; }
         .bar-value-label { font-size: 13px; font-weight: 800; fill: #961f46; text-anchor: middle; }
 
-        /* --- Scale Emphasis --- */
         .y-50-emphasis { font-size: 20px !important; font-weight: 900 !important; fill: #961f46 !important; }
         .y-20-emphasis { font-size: 20px !important; font-weight: 900 !important; fill: #ff8c00 !important; }
         
-        .threshold-tag { font-size: 12px; font-weight: 900; opacity: 0; transition: opacity 0.8s ease; text-transform: uppercase; }
+        /* Reverted Tag Style */
+        .threshold-tag { 
+            font-size: 12px; 
+            font-weight: 900; 
+            opacity: 0; 
+            transition: opacity 0.8s ease; 
+            text-transform: uppercase; 
+        }
 
-        /* --- Zones --- */
         #castrate-highlight { fill: #961f46; opacity: 0; transition: opacity 0.6s ease, y 0.8s ease, height 0.8s ease; }
         #deep-suppression-highlight { fill: #ff8c00; opacity: 0; transition: opacity 0.6s ease, y 0.8s ease, height 0.8s ease; }
-        
         .zone-visible { opacity: 0.1 !important; }
         .zone-zoom { opacity: 0.05 !important; }
         .orange-visible { opacity: 0.15 !important; }
 
-        /* --- Highlighting States --- */
-        .faded-bar { fill: #ccc !important; opacity: 0.15 !important; }
         .week-num { font-size: 14px; font-weight: bold; fill: #444; text-anchor: middle; transition: 0.4s; }
         .highlight-week { font-size: 20px !important; fill: #961f46 !important; }
 
-        /* --- Rail (Desktop) --- */
-        .rail { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; background: #ffffff; border-left: 1px solid #ddd; position: relative; z-index: 10; }
+        .rail { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; background: #ffffff; border-left: 1px solid #ddd; }
         .text-block { height: 100vh; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; padding: 0 40px; }
-        .content-box { 
-            padding: 30px; border-radius: 6px; border-left: 5px solid #eee; 
-            background: #fff; transition: 0.4s; opacity: 0.25; 
-            max-width: 500px;
-        }
+        .content-box { padding: 30px; border-radius: 6px; border-left: 5px solid #eee; background: #fff; transition: 0.4s; opacity: 0.25; max-width: 500px; }
         .text-block.active .content-box { opacity: 1; border-left-color: #961f46; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        
-        .block-label { 
-            font-weight: 800; color: #961f46; font-size: 0.9rem; 
-            display: block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;
-        }
+        .block-label { font-weight: 800; color: #961f46; font-size: 0.9rem; display: block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
         .content-box p { line-height: 1.7; color: #444; margin: 0; font-size: 1.1rem; }
 
-        /* --- MOBILE LAYOUT (Stack Top/Bottom) --- */
         @media (max-width: 768px) {
             .container { flex-direction: column; }
-            
-            /* Top Half: Chart */
-            .chart-viewport {
-                flex: none; /* Disable flex growing */
-                height: 50vh; /* Exactly half height */
-                width: 100%;
-                padding: 10px; /* Reduce padding */
-                background: white;
-                border-bottom: 1px solid #ddd;
-            }
-            .chart-card {
-                padding: 10px; /* Maximize SVG space */
-                box-shadow: none;
-                max-width: 100%;
-            }
-
-            /* Bottom Half: Scroller */
-            .rail {
-                flex: none;
-                height: 50vh; /* Remaining half */
-                width: 100%;
-                border-left: none;
-            }
-            /* Adjust text blocks to fit the half-height scroll */
-            .text-block {
-                height: 50vh; /* Match the rail height for snapping */
-                padding: 0 20px;
-            }
-            .content-box {
-                padding: 20px;
-                border-left-width: 4px;
-                font-size: 0.9rem;
-            }
-            .content-box p { font-size: 1rem; line-height: 1.4; }
-            
-            /* SVG Text Adjustments for small screens */
+            .chart-viewport { flex: none; height: 50vh; width: 100%; padding: 10px; border-bottom: 1px solid #ddd; }
+            .chart-card { padding: 10px; box-shadow: none; max-width: 100%; }
+            .rail { flex: none; height: 50vh; width: 100%; border-left: none; }
+            .text-block { height: 50vh; padding: 0 20px; }
+            .content-box { padding: 20px; font-size: 0.9rem; }
             .stat-large { font-size: 42px; }
-            .stat-desc { font-size: 16px; }
         }
     </style>
 </head>
@@ -114,24 +101,26 @@
             <svg id="viz-svg" viewBox="0 0 1241 739" xmlns="http://www.w3.org/2000/svg">
                 <rect id="castrate-highlight" x="170" y="524.5" width="942" height="35" />
                 <rect id="deep-suppression-highlight" x="170" y="545.5" width="942" height="14" />
-                
                 <g id="grid-layer"></g>
 
                 <text id="tag-castrate" class="threshold-tag" x="1120" y="145" style="fill: #961f46;">Castrate Level</text>
                 <text id="tag-deep" class="threshold-tag" x="1120" y="395" style="fill: #ff8c00;">Deep Suppression (≤20 ng/dL)</text>
 
                 <g id="bars-layer"></g>
+                <path id="trend-line" />
                 <g id="week-labels-group"></g>
+
+                <g id="injection-lines-group">
+                    <line class="inj-line" x1="183.4" y1="140" x2="183.4" y2="559.5" />
+                    <line class="inj-line" x1="635" y1="140" x2="635" y2="559.5" />
+                    <line class="inj-line" x1="1108" y1="140" x2="1108" y2="559.5" />
+                </g>
 
                 <g id="overlay-b2" class="overlay-group"><text class="injection-label" x="184" y="650" text-anchor="middle">1st Injection</text><text class="injection-label" x="635" y="650" text-anchor="middle">2nd Injection</text><text class="injection-label" x="1108" y="650" text-anchor="middle">3rd Injection</text></g>
                 <g id="overlay-b3" class="overlay-group"><text x="220" y="80" style="font-size: 15px; font-weight: bold; fill: #961f46;"><tspan x="220" dy="1.2em">Temporary spike in testosterone</tspan><tspan x="220" dy="1.2em">expected with GnRH agonists.</tspan></text></g>
                 <g id="overlay-b4" class="overlay-group"><text class="bar-value-label" x="242" y="515">15.9 ng/dL</text><text class="bar-value-label" x="635" y="525">14.2 ng/dL</text><text class="stat-large" x="640" y="330" text-anchor="middle">93.4%</text><text class="stat-desc" x="640" y="355" text-anchor="middle"><tspan x="640" dy="0">of patients maintained testosterone below</tspan><tspan x="640" dy="1.4em">castrate levels from week 4 to 48 (n=148).</tspan></text></g>
                 <g id="overlay-b5" class="overlay-group"><text class="bar-value-label" x="1108" y="535">9.9 ng/dL</text><text class="stat-desc" x="640" y="310" text-anchor="middle">mean serum testosterone level at week 48 was</text><text class="stat-large" x="640" y="365" text-anchor="middle">9.9 ng/dL</text></g>
-                
-                <g id="overlay-b7" class="overlay-group">
-                    <text class="stat-large" x="640" y="280" text-anchor="middle">94.1%</text>
-                    <text class="stat-desc" x="640" y="305" text-anchor="middle">of patients had a deep response</text>
-                </g>
+                <g id="overlay-b7" class="overlay-group"><text class="stat-large" x="640" y="280" text-anchor="middle">94.1%</text><text class="stat-desc" x="640" y="305" text-anchor="middle">of patients had a deep response</text></g>
 
                 <g id="y-axis-600"></g>
                 <g id="y-axis-50" style="opacity: 0;"></g>
@@ -143,56 +132,13 @@
     </div>
 
     <div class="rail" id="scroll-rail">
-        
-        <div class="text-block" id="block-1">
-            <div class="content-box">
-                <span class="block-label">The Challenge</span>
-                <p>To control advanced prostate cancer, suppressing serum testosterone is critical. Here is the <b>48-week clinical profile</b> of 148 patients initiating therapy.</p>
-            </div>
-        </div>
-
-        <div class="text-block" id="block-2">
-            <div class="content-box">
-                <span class="block-label">Twice-Yearly Dosing</span>
-                <p>Patients received injections at 24-week intervals (<b>Week 0, 24, and 48</b>). This extended dosing schedule is designed to minimize clinic visits while maintaining continuous therapeutic coverage.</p>
-            </div>
-        </div>
-
-        <div class="text-block" id="block-3">
-            <div class="content-box">
-                <span class="block-label">Expected Initial Surge</span>
-                <p>As is characteristic of GnRH agonists, a transient increase in testosterone—the <b>"flare"</b>—occurs immediately after the first dose (Week 2), before the pituitary becomes desensitized.</p>
-            </div>
-        </div>
-
-        <div class="text-block" id="block-4">
-            <div class="content-box">
-                <span class="block-label">Rapid, Sustained Control</span>
-                <p>By Week 4, the mean testosterone level drops precipitously to <b>15.9 ng/dL</b>, well below the standard castrate threshold (≤50 ng/dL). This suppression is strictly maintained through the re-dosing interval.</p>
-            </div>
-        </div>
-
-        <div class="text-block" id="block-5">
-            <div class="content-box">
-                <span class="block-label">Durable Efficacy</span>
-                <p>Efficacy does not wane over time. At the end of the 48-week study, the mean serum testosterone level was suppressed even further to <b>9.9 ng/dL</b>.</p>
-            </div>
-        </div>
-
-        <div class="text-block" id="block-6">
-            <div class="content-box">
-                <span class="block-label">Stability of Response</span>
-                <p>Rescaling the view to the <b>0–50 ng/dL range</b> reveals the remarkable stability of the maintenance phase. Patients consistently stayed well below the castrate threshold.</p>
-            </div>
-        </div>
-
-        <div class="text-block" id="block-7">
-            <div class="content-box">
-                <span class="block-label">Achieving Deep Suppression</span>
-                <p>Modern urology looks beyond the 50 ng/dL standard. <b>94.1% of patients</b> achieved Deep Suppression (≤20 ng/dL), offering confidence in the depth of disease control.</p>
-            </div>
-        </div>
-
+        <div class="text-block" id="block-1"><div class="content-box"><span class="block-label">The Challenge</span><p>To control advanced prostate cancer, suppressing serum testosterone is critical. Here is the <b>48-week clinical profile</b> of 148 patients initiating therapy.</p></div></div>
+        <div class="text-block" id="block-2"><div class="content-box"><span class="block-label">Twice-Yearly Dosing</span><p>Patients received injections at 24-week intervals (<b>Week 0, 24, and 48</b>). Data points are shown for scheduled measurement weeks, plus the initial response phase.</p></div></div>
+        <div class="text-block" id="block-3"><div class="content-box"><span class="block-label">Expected Initial Surge</span><p>As is characteristic of GnRH agonists, a transient increase in testosterone—the <b>"flare"</b>—occurs immediately after the first dose (Week 2).</p></div></div>
+        <div class="text-block" id="block-4"><div class="content-box"><span class="block-label">Rapid, Sustained Control</span><p>By Week 4, the mean testosterone level drops precipitously to <b>15.9 ng/dL</b>, well below the standard castrate threshold (≤50 ng/dL).</p></div></div>
+        <div class="text-block" id="block-5"><div class="content-box"><span class="block-label">Durable Efficacy</span><p>Efficacy does not wane over time. At the end of the 48-week study, the mean serum testosterone level was suppressed even further to <b>9.9 ng/dL</b>.</p></div></div>
+        <div class="text-block" id="block-6"><div class="content-box"><span class="block-label">Stability of Response</span><p>Rescaling the view to the <b>0–50 ng/dL range</b> reveals the remarkable stability of the maintenance phase.</p></div></div>
+        <div class="text-block" id="block-7"><div class="content-box"><span class="block-label">Achieving Deep Suppression</span><p>Modern urology looks beyond the 50 ng/dL standard. <b>94.1% of patients</b> achieved Deep Suppression (≤20 ng/dL).</p></div></div>
     </div>
 </div>
 
@@ -214,17 +160,45 @@
 
     const BASELINE = 559.5;
     const MAX_H = 422;
+    let introComplete = false;
+    let hasPlayed = false;
 
     const barsLayer = document.getElementById('bars-layer');
     const labelsGroup = document.getElementById('week-labels-group');
     const gridLayer = document.getElementById('grid-layer');
+    const trendLine = document.getElementById('trend-line');
 
-    // Init
+    let trendPathD = "";
+    let visibleIndices = [];
+
+    // 1. Initialize Elements (Hidden/Baseline state)
+    // Filter Logic: Keep i=0, i=1, and (i+1)%4 === 0
     barData.forEach((d, i) => {
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        rect.setAttribute('x', d.x); rect.setAttribute('width', 16.84);
-        rect.setAttribute('class', 'viz-bar'); rect.setAttribute('id', `bar-${i}`);
-        barsLayer.appendChild(rect);
+        const isVisible = (i === 0 || i === 1 || (i + 1) % 4 === 0);
+        
+        if (isVisible) {
+            visibleIndices.push(i);
+            
+            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+            rect.setAttribute('x', d.x); 
+            rect.setAttribute('width', 16.84);
+            rect.setAttribute('y', BASELINE); 
+            rect.setAttribute('height', 0);   
+            
+            // Color Logic: Measurements (Week 4,8,12) = Orange. Others (Week 1,2) = Maroon.
+            // Note: i=0 is Week 1, i=1 is Week 2. i=3 is Week 4.
+            const styleClass = ((i + 1) % 4 === 0) ? 'viz-bar bar-measurement' : 'viz-bar bar-intermediate';
+            rect.setAttribute('class', styleClass);
+            rect.setAttribute('id', `bar-${i}`);
+            barsLayer.appendChild(rect);
+
+            // Append to path if visible
+            const cx = d.x + 8.42;
+            // For the first point, Move to. For subsequent visible points, Line to.
+            const cmd = (trendPathD === "") ? 'M' : 'L';
+            trendPathD += `${cmd} ${cx} ${d.y}`;
+        }
+
         const week = i + 1;
         if (i === 0 || week % 4 === 0) {
             const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
@@ -234,6 +208,12 @@
         }
     });
 
+    trendLine.setAttribute('d', trendPathD);
+    const lineLen = trendLine.getTotalLength();
+    trendLine.style.strokeDasharray = lineLen;
+    trendLine.style.strokeDashoffset = lineLen; 
+
+    // Render Grid & Y-Axis
     [600, 500, 400, 300, 200, 100].forEach((v, i) => {
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute('x1', 170); line.setAttribute('x2', 1108);
@@ -243,7 +223,6 @@
         txt.textContent = v; txt.style.fontSize = "15px"; txt.style.textAnchor="end";
         document.getElementById('y-axis-600').appendChild(txt);
     });
-
     [50, 40, 30, 20, 10].forEach((v, i) => {
         const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
         txt.setAttribute('x', 160); txt.setAttribute('y', 140 + (i*84.4));
@@ -252,7 +231,44 @@
         document.getElementById('y-axis-50').appendChild(txt);
     });
 
+    // --- ANIMATION CONTROLLER ---
+    function playIntro() {
+        if(hasPlayed) return;
+        hasPlayed = true;
+
+        const TOTAL_BAR_TIME = 3000;
+        const LINE_DRAW_TIME = 1000;
+        // Animate only visible bars
+        const STAGGER = TOTAL_BAR_TIME / visibleIndices.length;
+
+        visibleIndices.forEach((idx, i) => {
+            setTimeout(() => {
+                const bar = document.getElementById(`bar-${idx}`);
+                if(bar) {
+                    bar.setAttribute('height', barData[idx].h);
+                    bar.setAttribute('y', barData[idx].y);
+                }
+            }, i * STAGGER);
+        });
+
+        // Line Animation
+        setTimeout(() => {
+            trendLine.style.strokeDashoffset = "0";
+        }, TOTAL_BAR_TIME);
+
+        // Finish
+        setTimeout(() => {
+            introComplete = true;
+            document.querySelectorAll('.viz-bar').forEach(b => b.classList.add('interactive-mode'));
+            trendLine.classList.add('interactive-mode');
+            trendLine.style.strokeDasharray = 'none'; 
+        }, TOTAL_BAR_TIME + LINE_DRAW_TIME);
+    }
+
+    // --- SCROLL OBSERVER ---
     function update(blockId) {
+        if (!introComplete) return; 
+
         const step = parseInt(blockId.split('-')[1]);
         const isZoomed = step >= 6;
         const isDeep = step === 7;
@@ -268,6 +284,9 @@
         const tCastrate = document.getElementById('tag-castrate');
         const tDeep = document.getElementById('tag-deep');
         
+        const injLines = document.querySelectorAll('.inj-line');
+        injLines.forEach(line => line.style.opacity = (step === 2) ? 1 : 0);
+
         if (step >= 4) {
             castrate.classList.add('zone-visible');
             if (isZoomed) {
@@ -291,23 +310,38 @@
         document.getElementById('y-axis-600').style.opacity = isZoomed ? 0 : 1;
         document.getElementById('y-axis-50').style.opacity = isZoomed ? 1 : 0;
 
-        barData.forEach((d, i) => {
-            const bar = document.getElementById(`bar-${i}`);
+        let pathD = "";
+        // Rebuild path only for visible bars
+        visibleIndices.forEach((idx, i) => {
+            const d = barData[idx];
+            const bar = document.getElementById(`bar-${idx}`);
             let h, y;
             if (isZoomed) {
                 h = ((d.h / 422 * 600) / 50) * 422; y = BASELINE - h;
-                bar.style.opacity = i < 3 ? 0 : 1;
+                bar.style.opacity = i < 3 ? 0 : 1; // Logic for first few bars in zoom?
+                // Wait, visibleIndices[0]=0, [1]=1, [2]=3. 
+                // Previous logic: if(i<3) opacity=0. i refers to index in barData.
+                // Here 'i' is index in visibleIndices. Let's use idx.
+                // Indices 0,1,2 (Week 1,2,3) were hidden in zoom previously. 
+                // Now we have indices 0,1,3. 
+                // We should hide indices < 3 in zoom (Week 1,2).
+                bar.style.opacity = (idx < 3) ? 0 : 1;
+                
                 bar.classList.remove('faded-bar');
             } else { 
                 h = d.h; y = d.y; bar.style.opacity = 1;
                 bar.classList.remove('faded-bar');
-                if (step === 2 && ![0, 23, 47].includes(i)) bar.classList.add('faded-bar');
-                if (step === 3 && i !== 1) bar.classList.add('faded-bar');
-                if (step === 4 && i < 3) bar.classList.add('faded-bar');
-                if (step === 5 && i !== 47) bar.classList.add('faded-bar');
+                if (step === 3 && idx !== 1) bar.classList.add('faded-bar'); // Flare
+                if (step === 4 && idx < 3) bar.classList.add('faded-bar'); // Suppression starts Week 4 (idx 3)
+                if (step === 5 && idx !== 47) bar.classList.add('faded-bar'); // End
             }
             bar.setAttribute('height', h); bar.setAttribute('y', y);
+            
+            const cx = d.x + 8.42; 
+            const cmd = (pathD === "") ? 'M' : 'L';
+            pathD += `${cmd} ${cx} ${y}`;
         });
+        trendLine.setAttribute('d', pathD);
 
         document.querySelectorAll('.grid-line').forEach((l, i) => {
             const yPos = isZoomed ? (BASELINE - ((5-i)*84.4)) : (140 + (i*70));
@@ -318,14 +352,27 @@
         });
 
         document.querySelectorAll('.week-num').forEach(l => l.classList.remove('highlight-week'));
-        if (step === 2) [0, 24, 48].forEach(w => document.getElementById(`label-week-${w}`).classList.add('highlight-week'));
+        if (step === 2) [0, 24, 48].forEach(w => {
+            const el = document.getElementById(`label-week-${w}`);
+            if(el) el.classList.add('highlight-week');
+        });
     }
 
     const obs = new IntersectionObserver(e => {
-        e.forEach(entry => { if(entry.isIntersecting) { entry.target.classList.add('active'); update(entry.target.id); } });
+        e.forEach(entry => { 
+            if(entry.isIntersecting) { 
+                if(entry.target.id === 'block-1' && !hasPlayed) {
+                    playIntro();
+                }
+                entry.target.classList.add('active'); 
+                if (introComplete) update(entry.target.id);
+            } 
+        });
     }, { root: document.getElementById('scroll-rail'), threshold: 0.6 });
     document.querySelectorAll('.text-block').forEach(b => obs.observe(b));
-    update('block-1');
+    
+    window.onload = () => setTimeout(() => { if(!hasPlayed) playIntro(); }, 100);
+
 </script>
 </body>
 </html>
