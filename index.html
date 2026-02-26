@@ -3,128 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrollytelling Prototype - Filtered Data</title>
+    <title>Scrollytelling Prototype - Copy Updates</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #f8f9fa; font-family: "Myriad Pro", "Segoe UI", sans-serif; }
         .container { display: flex; height: 100vh; width: 100vw; }
         
-        .chart-viewport { flex: 2; display: flex; align-items: center; justify-content: center; padding: 30px; }
-        .chart-card { width: 100%; max-width: 1150px; background: white; padding: 35px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
-        svg { width: 100%; height: auto; }
-
-        /* --- Bars Styles --- */
-        .viz-bar { 
-            transition: height 0.6s ease-out, y 0.6s ease-out; 
-            stroke: none;
-        }
-        .viz-bar.interactive-mode {
-            transition: fill 0.6s ease, opacity 0.6s ease, y 0.8s ease, height 0.8s ease;
+        .chart-viewport { 
+            flex: 2; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 30px; 
+            box-sizing: border-box;
         }
 
-        .bar-measurement { fill: #ff8c00; }
-        .bar-intermediate { fill: #961f46; }
-        .faded-bar { fill: #ccc !important; opacity: 0.2; }
+        /* --- Global Dot Navigation --- */
+        .scroll-nav {
+            position: fixed;
+            left: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 50;
+        }
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 140, 0, 0.25);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+        }
+        .nav-dot:hover {
+            background: rgba(255, 140, 0, 0.6);
+            transform: scale(1.2);
+        }
+        .nav-dot.active {
+            background: rgba(255, 140, 0, 1);
+            transform: scale(1.6);
+        }
 
-        /* --- Trend Line --- */
-        #trend-line {
-            fill: none;
+        /* --- Data Toggle Styles --- */
+        .data-toggle {
+            display: flex;
+            background: #eef1f5;
+            padding: 4px;
+            border-radius: 30px;
+            margin-bottom: 25px; 
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .toggle-btn {
+            background: transparent;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 26px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .toggle-btn.active {
+            background: #ff8c00;
+            color: white;
+            box-shadow: 0 2px 8px rgba(255, 140, 0, 0.3);
+        }
+        .toggle-btn:hover:not(.active) {
+            color: #333;
+            background: rgba(255,255,255,0.6);
+        }
+
+        .chart-card { width: 100%; max-width: 1150px; background: white; padding: 35px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
+        svg { width: 100%; height: auto; display: block; overflow: hidden; }
+
+        /* --- Data Points Styles --- */
+        .viz-point { 
+            fill: #ff8c00; 
+            stroke: #fff;
+            stroke-width: 2px;
+        }
+        .viz-point.interactive-mode {
+            transition: fill 0.6s ease, stroke 0.6s ease, opacity 0.6s ease;
+        }
+        .faded-point { 
+            fill: #ccc !important; 
+            stroke: #fff !important;
+            opacity: 0.3 !important; 
+        }
+
+        /* --- Trend Line Segments --- */
+        .trend-segment {
             stroke: #ff8c00;
             stroke-width: 4px;
-            opacity: 1;
             stroke-linecap: round;
-            stroke-linejoin: round;
-            transition: stroke-dashoffset 1s linear; 
         }
-        #trend-line.interactive-mode {
-            transition: d 0.8s ease, opacity 0.8s ease;
+        .trend-segment.interactive-mode {
+            transition: stroke 0.6s ease, opacity 0.6s ease;
+        }
+        .trend-segment.faded-line {
+            stroke: #ccc !important;
+            opacity: 0.3 !important;
         }
 
-        /* --- Injection Lines --- */
-        .inj-line { stroke: #961f46; stroke-width: 2px; stroke-dasharray: 5, 5; opacity: 0; transition: opacity 0.6s ease; }
+        /* --- Injection Gradients --- */
+        .inj-gradient-rect {
+            fill: url(#injectionFade);
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
 
-        /* Grid */
-        .grid-line { transition: y1 0.8s ease, y2 0.8s ease, opacity 0.8s ease, stroke 0.6s ease, stroke-width 0.6s ease; stroke: #961f46; stroke-width: 0.3; opacity: 0.2; }
+        /* Grid & Axes */
+        .grid-line { transition: stroke 0.6s ease, opacity 0.6s ease, stroke-width 0.6s ease; stroke: #888; stroke-width: 0.3; opacity: 0.2; }
+        .axis-line { stroke: #666; stroke-width: 1.5; fill: none; }
+        
+        .axis-text { 
+            font-size: 15px; 
+            fill: #333; 
+            text-anchor: end; 
+            transition: fill 0.6s ease, font-size 0.6s ease, opacity 0.6s ease; 
+        }
 
         /* --- Overlays --- */
         .overlay-group { opacity: 0; transition: opacity 0.5s ease; pointer-events: none; }
         .visible { opacity: 1 !important; }
         
-        .stat-large { font-size: 48px; font-weight: 900; fill: #961f46; }
+        .stat-large { font-size: 48px; font-weight: 900; fill: #ff8c00; }
         .stat-desc { font-size: 18px; font-weight: 700; fill: #333; }
-        .injection-label { font-size: 16px; font-weight: 800; fill: #961f46; text-transform: uppercase; letter-spacing: 0.5px; }
-        .bar-value-label { font-size: 13px; font-weight: 800; fill: #961f46; text-anchor: middle; }
+        
+        .injection-label { font-size: 16px; font-weight: 800; fill: #2c7bb6; text-transform: uppercase; letter-spacing: 0.5px; } 
+        .bar-value-label { font-size: 13px; font-weight: 800; fill: #ff8c00; text-anchor: middle; }
 
-        .y-50-emphasis { font-size: 20px !important; font-weight: 900 !important; fill: #961f46 !important; }
+        .callout-text { font-size: 18px; font-weight: 600; fill: #333; }
+        .callout-highlight { font-size: 36px; font-weight: 900; fill: #ff8c00; }
+
+        .y-50-emphasis { font-size: 20px !important; font-weight: 900 !important; fill: #888 !important; }
         .y-20-emphasis { font-size: 20px !important; font-weight: 900 !important; fill: #ff8c00 !important; }
         
-        /* Reverted Tag Style */
-        .threshold-tag { 
-            font-size: 12px; 
-            font-weight: 900; 
-            opacity: 0; 
-            transition: opacity 0.8s ease; 
-            text-transform: uppercase; 
-        }
+        .threshold-tag { font-size: 12px; font-weight: 900; opacity: 0; transition: opacity 0.8s ease; text-transform: uppercase; }
 
-        #castrate-highlight { fill: #961f46; opacity: 0; transition: opacity 0.6s ease, y 0.8s ease, height 0.8s ease; }
+        #castrate-highlight { fill: #888; opacity: 0; transition: opacity 0.6s ease, y 0.8s ease, height 0.8s ease; }
         #deep-suppression-highlight { fill: #ff8c00; opacity: 0; transition: opacity 0.6s ease, y 0.8s ease, height 0.8s ease; }
         .zone-visible { opacity: 0.1 !important; }
         .zone-zoom { opacity: 0.05 !important; }
         .orange-visible { opacity: 0.15 !important; }
 
         .week-num { font-size: 14px; font-weight: bold; fill: #444; text-anchor: middle; transition: 0.4s; }
-        .highlight-week { font-size: 20px !important; fill: #961f46 !important; }
+        .highlight-week { font-size: 20px !important; fill: #ff8c00 !important; }
 
+        /* --- Rail --- */
         .rail { flex: 1; overflow-y: scroll; scroll-snap-type: y mandatory; background: #ffffff; border-left: 1px solid #ddd; }
         .text-block { height: 100vh; display: flex; align-items: center; justify-content: center; scroll-snap-align: start; padding: 0 40px; }
         .content-box { padding: 30px; border-radius: 6px; border-left: 5px solid #eee; background: #fff; transition: 0.4s; opacity: 0.25; max-width: 500px; }
-        .text-block.active .content-box { opacity: 1; border-left-color: #961f46; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .block-label { font-weight: 800; color: #961f46; font-size: 0.9rem; display: block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .text-block.active .content-box { opacity: 1; border-left-color: #ff8c00; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .block-label { font-weight: 800; color: #ff8c00; font-size: 0.9rem; display: block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
         .content-box p { line-height: 1.7; color: #444; margin: 0; font-size: 1.1rem; }
 
         @media (max-width: 768px) {
             .container { flex-direction: column; }
-            .chart-viewport { flex: none; height: 50vh; width: 100%; padding: 10px; border-bottom: 1px solid #ddd; }
+            .chart-viewport { flex: none; height: 50vh; width: 100%; padding: 15px 10px 10px 10px; border-bottom: 1px solid #ddd; }
+            .data-toggle { margin-bottom: 10px; }
+            .toggle-btn { padding: 6px 14px; font-size: 12px; }
             .chart-card { padding: 10px; box-shadow: none; max-width: 100%; }
+            
+            /* Move Nav Dots to right side of viewport on mobile */
+            .scroll-nav { left: auto; right: 15px; top: 25%; }
+            
             .rail { flex: none; height: 50vh; width: 100%; border-left: none; }
             .text-block { height: 50vh; padding: 0 20px; }
             .content-box { padding: 20px; font-size: 0.9rem; }
             .stat-large { font-size: 42px; }
+            .callout-highlight { font-size: 28px; }
         }
     </style>
 </head>
 <body>
 
+<div class="scroll-nav">
+    <div class="nav-dot active" data-target="block-1"></div>
+    <div class="nav-dot" data-target="block-2"></div>
+    <div class="nav-dot" data-target="block-3"></div>
+    <div class="nav-dot" data-target="block-4"></div>
+    <div class="nav-dot" data-target="block-5"></div>
+    <div class="nav-dot" data-target="block-6"></div>
+    <div class="nav-dot" data-target="block-7"></div>
+</div>
+
 <div class="container">
     <div class="chart-viewport">
+        <div class="data-toggle" id="data-toggle-group">
+            <button class="toggle-btn active">6-Month</button>
+            <button class="toggle-btn">4-Month</button>
+            <button class="toggle-btn">3-Month</button>
+        </div>
+
         <div class="chart-card">
             <svg id="viz-svg" viewBox="0 0 1241 739" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="injectionFade" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" style="stop-color:#2c7bb6; stop-opacity:0.25" />
+                        <stop offset="100%" style="stop-color:#2c7bb6; stop-opacity:0" />
+                    </linearGradient>
+                </defs>
+
                 <rect id="castrate-highlight" x="170" y="524.5" width="942" height="35" />
                 <rect id="deep-suppression-highlight" x="170" y="545.5" width="942" height="14" />
+                
                 <g id="grid-layer"></g>
+                <g id="y-axis-layer"></g>
 
-                <text id="tag-castrate" class="threshold-tag" x="1120" y="145" style="fill: #961f46;">Castrate Level</text>
-                <text id="tag-deep" class="threshold-tag" x="1120" y="395" style="fill: #ff8c00;">Deep Suppression (≤20 ng/dL)</text>
+                <polyline class="axis-line" points="170,137.5 170,559.5 1120,559.5" />
 
-                <g id="bars-layer"></g>
-                <path id="trend-line" />
-                <g id="week-labels-group"></g>
+                <text style="font-size: 15px; fill: #333; text-anchor: end;" x="160" y="564">0</text>
 
                 <g id="injection-lines-group">
-                    <line class="inj-line" x1="183.4" y1="140" x2="183.4" y2="559.5" />
-                    <line class="inj-line" x1="635" y1="140" x2="635" y2="559.5" />
-                    <line class="inj-line" x1="1108" y1="140" x2="1108" y2="559.5" />
+                    <rect class="inj-gradient-rect" x="183.4" y="140" width="451.6" height="419.5" />
+                    <rect class="inj-gradient-rect" x="635" y="140" width="473" height="419.5" />
                 </g>
 
-                <g id="overlay-b2" class="overlay-group"><text class="injection-label" x="184" y="650" text-anchor="middle">1st Injection</text><text class="injection-label" x="635" y="650" text-anchor="middle">2nd Injection</text><text class="injection-label" x="1108" y="650" text-anchor="middle">3rd Injection</text></g>
-                <g id="overlay-b3" class="overlay-group"><text x="220" y="80" style="font-size: 15px; font-weight: bold; fill: #961f46;"><tspan x="220" dy="1.2em">Temporary spike in testosterone</tspan><tspan x="220" dy="1.2em">expected with GnRH agonists.</tspan></text></g>
+                <text id="tag-castrate" class="threshold-tag" x="1120" y="145" style="fill: #888;">Castrate Level</text>
+                <text id="tag-deep" class="threshold-tag" x="1120" y="395" style="fill: #ff8c00;">Deep Suppression (≤20 ng/dL)</text>
+
+                <g id="trend-segments-group"></g>
+                <g id="points-layer"></g>
+                <g id="week-labels-group"></g>
+
+                <g id="overlay-b2" class="overlay-group">
+                    <text class="injection-label" x="183.4" y="105" text-anchor="start">1st Injection</text>
+                    <text class="injection-label" x="635" y="105" text-anchor="start">2nd Injection</text>
+                    <line x1="183.4" y1="110" x2="183.4" y2="140" style="stroke:#2c7bb6; stroke-width:2; fill:none;" />
+                    <line x1="635" y1="110" x2="635" y2="140" style="stroke:#2c7bb6; stroke-width:2; fill:none;" />
+                    <text x="409" y="220" text-anchor="middle" class="callout-text">
+                        <tspan x="409" dy="0">PRODUCT X requires as few as</tspan>
+                        <tspan x="409" dy="1.4em" class="callout-highlight">2 doses per year—</tspan>
+                        <tspan x="409" dy="1.6em">simplifying treatment schedules</tspan>
+                        <tspan x="409" dy="1.4em">to strengthen patient adherence—</tspan>
+                        <tspan x="409" dy="1.4em">while maintaining deep and durable</tspan>
+                        <tspan x="409" dy="1.4em">testosterone suppression</tspan>
+                        <tspan x="409" dy="1.4em">throughout each dosing cycle.</tspan>
+                    </text>
+                </g>
+
+                <g id="overlay-b3" class="overlay-group"><text x="220" y="80" style="font-size: 15px; font-weight: bold; fill: #ff8c00;"><tspan x="220" dy="1.2em">Temporary spike in testosterone</tspan><tspan x="220" dy="1.2em">expected with GnRH agonists.</tspan></text></g>
                 <g id="overlay-b4" class="overlay-group"><text class="bar-value-label" x="242" y="515">15.9 ng/dL</text><text class="bar-value-label" x="635" y="525">14.2 ng/dL</text><text class="stat-large" x="640" y="330" text-anchor="middle">93.4%</text><text class="stat-desc" x="640" y="355" text-anchor="middle"><tspan x="640" dy="0">of patients maintained testosterone below</tspan><tspan x="640" dy="1.4em">castrate levels from week 4 to 48 (n=148).</tspan></text></g>
                 <g id="overlay-b5" class="overlay-group"><text class="bar-value-label" x="1108" y="535">9.9 ng/dL</text><text class="stat-desc" x="640" y="310" text-anchor="middle">mean serum testosterone level at week 48 was</text><text class="stat-large" x="640" y="365" text-anchor="middle">9.9 ng/dL</text></g>
                 <g id="overlay-b7" class="overlay-group"><text class="stat-large" x="640" y="280" text-anchor="middle">94.1%</text><text class="stat-desc" x="640" y="305" text-anchor="middle">of patients had a deep response</text></g>
 
-                <g id="y-axis-600"></g>
-                <g id="y-axis-50" style="opacity: 0;"></g>
-                <text style="font-size: 15px; fill: #333; text-anchor: end;" x="160" y="562">0</text>
                 <text style="font-size: 16px; font-weight: bold; fill: #333;" transform="translate(50, 348) rotate(-90)" text-anchor="middle">Mean Serum Testosterone (ng/dL)</text>
                 <text style="font-size: 14px; font-weight: bold; fill: #666;" x="645" y="620" text-anchor="middle">WEEKS</text>
             </svg>
@@ -132,17 +262,61 @@
     </div>
 
     <div class="rail" id="scroll-rail">
-        <div class="text-block" id="block-1"><div class="content-box"><span class="block-label">The Challenge</span><p>To control advanced prostate cancer, suppressing serum testosterone is critical. Here is the <b>48-week clinical profile</b> of 148 patients initiating therapy.</p></div></div>
-        <div class="text-block" id="block-2"><div class="content-box"><span class="block-label">Twice-Yearly Dosing</span><p>Patients received injections at 24-week intervals (<b>Week 0, 24, and 48</b>). Data points are shown for scheduled measurement weeks, plus the initial response phase.</p></div></div>
-        <div class="text-block" id="block-3"><div class="content-box"><span class="block-label">Expected Initial Surge</span><p>As is characteristic of GnRH agonists, a transient increase in testosterone—the <b>"flare"</b>—occurs immediately after the first dose (Week 2).</p></div></div>
-        <div class="text-block" id="block-4"><div class="content-box"><span class="block-label">Rapid, Sustained Control</span><p>By Week 4, the mean testosterone level drops precipitously to <b>15.9 ng/dL</b>, well below the standard castrate threshold (≤50 ng/dL).</p></div></div>
-        <div class="text-block" id="block-5"><div class="content-box"><span class="block-label">Durable Efficacy</span><p>Efficacy does not wane over time. At the end of the 48-week study, the mean serum testosterone level was suppressed even further to <b>9.9 ng/dL</b>.</p></div></div>
-        <div class="text-block" id="block-6"><div class="content-box"><span class="block-label">Stability of Response</span><p>Rescaling the view to the <b>0–50 ng/dL range</b> reveals the remarkable stability of the maintenance phase.</p></div></div>
-        <div class="text-block" id="block-7"><div class="content-box"><span class="block-label">Achieving Deep Suppression</span><p>Modern urology looks beyond the 50 ng/dL standard. <b>94.1% of patients</b> achieved Deep Suppression (≤20 ng/dL).</p></div></div>
+        <div class="text-block" id="block-1">
+            <div class="content-box">
+                <span class="block-label">A foundation of treatment</span>
+                <p>Achieving and maintaining deep, durable testosterone suppression is essential in the management of advanced prostate cancer. PRODUCT X delivers rapid castrate levels followed by profound, sustained suppression, supported by extensive clinical evidence across long‑acting depot formulations. Here is the 48-week clinical profile of 148 patients initiating therapy.</p>
+            </div>
+        </div>
+        <div class="text-block" id="block-2">
+            <div class="content-box">
+                <span class="block-label">Twice-Yearly Dosing</span>
+                <p>Product X requires as few as 2 doses per year, simplifying treatment schedules to strengthen patient adherence. Supported by real world evidence, ~9 in 10 patients adhered to treatment at 3 years.</p>
+            </div>
+        </div>
+        <div class="text-block" id="block-3">
+            <div class="content-box">
+                <span class="block-label">Expected Initial Testosterone Surge</span>
+                <p>As with all GnRH agonists, an initial, transient rise in testosterone—often referred to as the treatment <b>“flare”</b>—may occur shortly after starting therapy. This temporary increase is an expected physiologic response before testosterone levels decline rapidly with continued PRODUCT X treatment.</p>
+            </div>
+        </div>
+        <div class="text-block" id="block-4">
+            <div class="content-box">
+                <span class="block-label">SUSTAINED CONTROL</span>
+                <p>Following the expected initial surge, testosterone levels with PRODUCT X decline rapidly. Studies show over 93% of patients on PRODUCT X achieved testosterone suppression down to castrate levels within the first 30 days and throughout treatment.</p>
+            </div>
+        </div>
+        <div class="text-block" id="block-5">
+            <div class="content-box">
+                <span class="block-label">Durable Efficacy</span>
+                <p>PRODUCT X provides deep and sustained testosterone suppression, with mean levels remaining well below the castrate threshold throughout treatment. By the end of the 48‑week interval, mean serum testosterone reached <b>9.9 ng/dL</b>, reflecting continued profound suppression.</p>
+            </div>
+        </div>
+        <div class="text-block" id="block-6">
+            <div class="content-box">
+                <span class="block-label">Stability of Response</span>
+                <p>Rescaling to the <b>0–50 ng/dL range</b> highlights how PRODUCT X demonstrates consistent suppression across the dosing interval, with stable testosterone levels throughout the maintenance phase.</p>
+            </div>
+        </div>
+        <div class="text-block" id="block-7">
+            <div class="content-box">
+                <span class="block-label">Deep Testosterone Suppression</span>
+                <p>PRODUCT X delivers deep levels of testosterone suppression, achieving concentrations ≤20 ng/dL in the majority of patients. In this study, <b>94.1% of patients</b> reached deep suppression within this threshold.</p>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
+    // --- UI INTERACTION FOR TOGGLE ---
+    const toggleButtons = document.querySelectorAll('.toggle-btn');
+    toggleButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            toggleButtons.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+        });
+    });
+
     const barData = [
         {h: 304, y: 254, x: 175}, {h: 426, y: 132, x: 194.64}, {h: 86, y: 472, x: 214.28}, {h: 23, y: 535, x: 233.93},
         {h: 12, y: 546, x: 253.57}, {h: 8, y: 550, x: 273.21}, {h: 6, y: 552, x: 292.85}, {h: 4, y: 554, x: 312.49},
@@ -163,40 +337,33 @@
     let introComplete = false;
     let hasPlayed = false;
 
-    const barsLayer = document.getElementById('bars-layer');
+    const pointsLayer = document.getElementById('points-layer');
+    const segmentsGroup = document.getElementById('trend-segments-group');
     const labelsGroup = document.getElementById('week-labels-group');
     const gridLayer = document.getElementById('grid-layer');
-    const trendLine = document.getElementById('trend-line');
+    const yAxisLayer = document.getElementById('y-axis-layer');
 
-    let trendPathD = "";
     let visibleIndices = [];
+    const lineElements = [];
+    
+    // Points start at their true data y positions now, no sliding
+    let currentYs = barData.map(d => d.y);
 
-    // 1. Initialize Elements (Hidden/Baseline state)
-    // Filter Logic: Keep i=0, i=1, and (i+1)%4 === 0
+    // 1. Initialize Points (Start with opacity 0)
     barData.forEach((d, i) => {
         const isVisible = (i === 0 || i === 1 || (i + 1) % 4 === 0);
-        
         if (isVisible) {
             visibleIndices.push(i);
-            
-            const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-            rect.setAttribute('x', d.x); 
-            rect.setAttribute('width', 16.84);
-            rect.setAttribute('y', BASELINE); 
-            rect.setAttribute('height', 0);   
-            
-            // Color Logic: Measurements (Week 4,8,12) = Orange. Others (Week 1,2) = Maroon.
-            // Note: i=0 is Week 1, i=1 is Week 2. i=3 is Week 4.
-            const styleClass = ((i + 1) % 4 === 0) ? 'viz-bar bar-measurement' : 'viz-bar bar-intermediate';
-            rect.setAttribute('class', styleClass);
-            rect.setAttribute('id', `bar-${i}`);
-            barsLayer.appendChild(rect);
-
-            // Append to path if visible
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
             const cx = d.x + 8.42;
-            // For the first point, Move to. For subsequent visible points, Line to.
-            const cmd = (trendPathD === "") ? 'M' : 'L';
-            trendPathD += `${cmd} ${cx} ${d.y}`;
+            
+            circle.setAttribute('cx', cx); 
+            circle.setAttribute('cy', d.y); 
+            circle.setAttribute('r', 6);
+            circle.setAttribute('class', 'viz-point');
+            circle.setAttribute('id', `point-${i}`);
+            circle.style.opacity = 0; 
+            pointsLayer.appendChild(circle);
         }
 
         const week = i + 1;
@@ -208,61 +375,124 @@
         }
     });
 
-    trendLine.setAttribute('d', trendPathD);
-    const lineLen = trendLine.getTotalLength();
-    trendLine.style.strokeDasharray = lineLen;
-    trendLine.style.strokeDashoffset = lineLen; 
+    // Create Line Segments dynamically
+    for (let j = 0; j < visibleIndices.length - 1; j++) {
+        const idx1 = visibleIndices[j];
+        const idx2 = visibleIndices[j+1];
+        const d1 = barData[idx1];
+        const d2 = barData[idx2];
+        
+        const x1 = d1.x + 8.42;
+        const x2 = d2.x + 8.42;
+        
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', d1.y); 
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', d2.y);
+        line.setAttribute('class', 'trend-segment');
+        line.setAttribute('id', `trend-seg-${j}`);
+        
+        const len = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(d2.y-d1.y, 2));
+        line.style.strokeDasharray = len;
+        line.style.strokeDashoffset = len;
+        
+        segmentsGroup.appendChild(line);
+        lineElements.push({ el: line, idx1, idx2 });
+    }
 
-    // Render Grid & Y-Axis
-    [600, 500, 400, 300, 200, 100].forEach((v, i) => {
+    // --- Sliding Axis Initialization ---
+    const allTicks = [];
+    const unzoomedVals = [100, 200, 300, 400, 500, 600];
+    const zoomedVals = [10, 20, 30, 40, 50];
+
+    function createTick(val, type) {
+        const yPos = BASELINE - (val / 600) * MAX_H; 
+
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
         line.setAttribute('x1', 170); line.setAttribute('x2', 1108);
-        line.setAttribute('class', 'grid-line'); gridLayer.appendChild(line);
+        line.setAttribute('y1', yPos); line.setAttribute('y2', yPos);
+        line.setAttribute('class', 'grid-line');
+        if (type === 'z') line.style.opacity = 0; 
+        gridLayer.appendChild(line);
+
         const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        txt.setAttribute('x', 160); txt.setAttribute('y', 140 + (i*70));
-        txt.textContent = v; txt.style.fontSize = "15px"; txt.style.textAnchor="end";
-        document.getElementById('y-axis-600').appendChild(txt);
-    });
-    [50, 40, 30, 20, 10].forEach((v, i) => {
-        const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-        txt.setAttribute('x', 160); txt.setAttribute('y', 140 + (i*84.4));
-        txt.textContent = v; txt.style.fontSize = "15px"; txt.style.textAnchor="end";
-        txt.setAttribute('id', `label-${v}-zoom`);
-        document.getElementById('y-axis-50').appendChild(txt);
-    });
+        txt.setAttribute('x', 160);
+        txt.setAttribute('y', yPos + 4.5);
+        txt.textContent = val;
+        txt.setAttribute('class', 'axis-text');
+        if (type === 'z') txt.style.opacity = 0; 
+        yAxisLayer.appendChild(txt);
+
+        allTicks.push({ val, type, elLine: line, elText: txt, currentY: yPos });
+    }
+
+    unzoomedVals.forEach(v => createTick(v, 'unz'));
+    zoomedVals.forEach(v => createTick(v, 'z'));
+
+    function isElementFaded(step, idx) {
+        if (step === 3 && idx !== 1) return true;
+        if (step === 4 && idx < 3) return true;
+        if (step === 5 && idx !== 47) return true;
+        return false;
+    }
 
     // --- ANIMATION CONTROLLER ---
+    let masterSyncTween = null;
+
     function playIntro() {
         if(hasPlayed) return;
         hasPlayed = true;
 
-        const TOTAL_BAR_TIME = 3000;
-        const LINE_DRAW_TIME = 1000;
-        // Animate only visible bars
-        const STAGGER = TOTAL_BAR_TIME / visibleIndices.length;
+        const TOTAL_TIME = 2000; // Exact 2 second sequence
+        const STAGGER = TOTAL_TIME / lineElements.length;
 
-        visibleIndices.forEach((idx, i) => {
+        // Immediately fade in the very first dot
+        const firstDotIdx = visibleIndices[0];
+        const firstDot = document.getElementById(`point-${firstDotIdx}`);
+        if(firstDot) {
+            firstDot.style.transition = 'opacity 0.3s ease';
+            firstDot.style.opacity = 1;
+        }
+
+        // Left-to-right sweep sequence
+        lineElements.forEach((seg, j) => {
             setTimeout(() => {
-                const bar = document.getElementById(`bar-${idx}`);
-                if(bar) {
-                    bar.setAttribute('height', barData[idx].h);
-                    bar.setAttribute('y', barData[idx].y);
-                }
-            }, i * STAGGER);
+                // 1. Draw this line segment
+                seg.el.style.opacity = 1;
+                seg.el.style.transition = `stroke-dashoffset ${STAGGER}ms linear`;
+                seg.el.style.strokeDashoffset = "0";
+                
+                // 2. Fade in the destination dot as the line approaches it
+                setTimeout(() => {
+                    const pt = document.getElementById(`point-${seg.idx2}`);
+                    if(pt) {
+                        pt.style.transition = 'opacity 0.3s ease';
+                        pt.style.opacity = 1;
+                    }
+                }, STAGGER * 0.5); 
+
+            }, j * STAGGER);
         });
 
-        // Line Animation
-        setTimeout(() => {
-            trendLine.style.strokeDashoffset = "0";
-        }, TOTAL_BAR_TIME);
-
-        // Finish
+        // Switch to Interactive Mode once draw is complete
         setTimeout(() => {
             introComplete = true;
-            document.querySelectorAll('.viz-bar').forEach(b => b.classList.add('interactive-mode'));
-            trendLine.classList.add('interactive-mode');
-            trendLine.style.strokeDasharray = 'none'; 
-        }, TOTAL_BAR_TIME + LINE_DRAW_TIME);
+            document.querySelectorAll('.viz-point').forEach(p => {
+                p.style.transition = ''; // clear intro transitions
+                p.classList.add('interactive-mode');
+            });
+            lineElements.forEach(seg => {
+                seg.el.style.transition = '';
+                seg.el.classList.add('interactive-mode');
+                seg.el.style.strokeDasharray = 'none'; 
+            });
+            
+            // Re-trigger update in case they scrolled slightly during the 2s intro
+            const activeBlock = document.querySelector('.text-block.active');
+            if (activeBlock) update(activeBlock.id);
+            
+        }, TOTAL_TIME + 100);
     }
 
     // --- SCROLL OBSERVER ---
@@ -284,71 +514,138 @@
         const tCastrate = document.getElementById('tag-castrate');
         const tDeep = document.getElementById('tag-deep');
         
-        const injLines = document.querySelectorAll('.inj-line');
-        injLines.forEach(line => line.style.opacity = (step === 2) ? 1 : 0);
+        const injRects = document.querySelectorAll('.inj-gradient-rect');
+        injRects.forEach(r => r.style.opacity = (step === 2) ? 1 : 0);
 
         if (step >= 4) {
             castrate.classList.add('zone-visible');
             if (isZoomed) {
                 castrate.setAttribute('y', 137.5); castrate.setAttribute('height', 422); castrate.classList.add('zone-zoom');
-                l50.classList.add('y-50-emphasis'); tCastrate.style.opacity = 1;
-                tCastrate.textContent = "Castrate Level"; 
-                
+                tCastrate.style.opacity = 1;
                 if (isDeep) {
                     deep.classList.add('orange-visible'); deep.setAttribute('y', 390.7); deep.setAttribute('height', 168.8);
-                    l20.classList.add('y-20-emphasis'); tDeep.style.opacity = 1;
+                    tDeep.style.opacity = 1;
                 } else {
-                    deep.classList.remove('orange-visible'); l20.classList.remove('y-20-emphasis'); tDeep.style.opacity = 0;
+                    deep.classList.remove('orange-visible'); tDeep.style.opacity = 0;
                 }
             } else {
                 castrate.setAttribute('y', 524.5); castrate.setAttribute('height', 35); castrate.classList.remove('zone-zoom');
-                l50.classList.remove('y-50-emphasis'); tCastrate.style.opacity = 0;
-                deep.classList.remove('orange-visible'); l20.classList.remove('y-20-emphasis'); tDeep.style.opacity = 0;
+                tCastrate.style.opacity = 0;
+                deep.classList.remove('orange-visible'); tDeep.style.opacity = 0;
             }
         } else { castrate.classList.remove('zone-visible'); deep.classList.remove('orange-visible'); tCastrate.style.opacity = 0; tDeep.style.opacity = 0;}
 
-        document.getElementById('y-axis-600').style.opacity = isZoomed ? 0 : 1;
-        document.getElementById('y-axis-50').style.opacity = isZoomed ? 1 : 0;
-
-        let pathD = "";
-        // Rebuild path only for visible bars
-        visibleIndices.forEach((idx, i) => {
+        // SETUP TARGETS FOR JS TWEEN
+        let targetYs = new Array(barData.length).fill(0);
+        visibleIndices.forEach((idx) => {
             const d = barData[idx];
-            const bar = document.getElementById(`bar-${idx}`);
-            let h, y;
-            if (isZoomed) {
-                h = ((d.h / 422 * 600) / 50) * 422; y = BASELINE - h;
-                bar.style.opacity = i < 3 ? 0 : 1; // Logic for first few bars in zoom?
-                // Wait, visibleIndices[0]=0, [1]=1, [2]=3. 
-                // Previous logic: if(i<3) opacity=0. i refers to index in barData.
-                // Here 'i' is index in visibleIndices. Let's use idx.
-                // Indices 0,1,2 (Week 1,2,3) were hidden in zoom previously. 
-                // Now we have indices 0,1,3. 
-                // We should hide indices < 3 in zoom (Week 1,2).
-                bar.style.opacity = (idx < 3) ? 0 : 1;
-                
-                bar.classList.remove('faded-bar');
-            } else { 
-                h = d.h; y = d.y; bar.style.opacity = 1;
-                bar.classList.remove('faded-bar');
-                if (step === 3 && idx !== 1) bar.classList.add('faded-bar'); // Flare
-                if (step === 4 && idx < 3) bar.classList.add('faded-bar'); // Suppression starts Week 4 (idx 3)
-                if (step === 5 && idx !== 47) bar.classList.add('faded-bar'); // End
-            }
-            bar.setAttribute('height', h); bar.setAttribute('y', y);
-            
-            const cx = d.x + 8.42; 
-            const cmd = (pathD === "") ? 'M' : 'L';
-            pathD += `${cmd} ${cx} ${y}`;
+            targetYs[idx] = isZoomed ? (BASELINE - ((d.h / 422 * 600) / 50) * 422) : d.y;
         });
-        trendLine.setAttribute('d', pathD);
 
-        document.querySelectorAll('.grid-line').forEach((l, i) => {
-            const yPos = isZoomed ? (BASELINE - ((5-i)*84.4)) : (140 + (i*70));
-            l.setAttribute('y1', yPos); l.setAttribute('y2', yPos);
-            if (isZoomed && i === 0) { l.style.stroke = '#961f46'; l.style.opacity = 0.8; l.style.strokeWidth = 1; }
-            else if (isDeep && i === 3) { l.style.stroke = '#ff8c00'; l.style.opacity = 0.8; l.style.strokeWidth = 1; }
-            else { l.style.stroke = '#961f46'; l.style.opacity = 0.2; l.style.strokeWidth = 0.3; }
+        // Setup Axis targets and apply CSS styling
+        allTicks.forEach(t => {
+            let max = isZoomed ? 50 : 600;
+            t.targetY = BASELINE - (t.val / max) * MAX_H;
+            t.startY = t.currentY;
+
+            if (isZoomed) {
+                if (t.type === 'unz') {
+                    t.elLine.style.opacity = 0;
+                    t.elText.style.opacity = 0;
+                } else {
+                    t.elText.style.opacity = 1;
+                    if (t.val === 50) {
+                        t.elLine.style.stroke = '#888'; t.elLine.style.opacity = 0.8; t.elLine.style.strokeWidth = 1;
+                        t.elText.classList.add('y-50-emphasis');
+                    } else if (isDeep && t.val === 20) {
+                        t.elLine.style.stroke = '#ff8c00'; t.elLine.style.opacity = 0.8; t.elLine.style.strokeWidth = 1;
+                        t.elText.classList.add('y-20-emphasis');
+                    } else {
+                        t.elLine.style.stroke = '#888'; t.elLine.style.opacity = 0.2; t.elLine.style.strokeWidth = 0.3;
+                        t.elText.classList.remove('y-50-emphasis');
+                        t.elText.classList.remove('y-20-emphasis');
+                    }
+                }
+            } else {
+                if (t.type === 'unz') {
+                    t.elLine.style.stroke = '#888'; t.elLine.style.opacity = 0.2; t.elLine.style.strokeWidth = 0.3;
+                    t.elText.style.opacity = 1;
+                } else {
+                    t.elLine.style.opacity = 0;
+                    t.elText.style.opacity = 0;
+                    t.elText.classList.remove('y-50-emphasis', 'y-20-emphasis');
+                }
+            }
+        });
+
+        // START MASTER SYNC TWEEN
+        if (masterSyncTween) cancelAnimationFrame(masterSyncTween);
+        let startYs = [...currentYs];
+        let startTime = performance.now();
+
+        function runSyncTween(time) {
+            let p = Math.min((time - startTime) / 800, 1);
+            let eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2; 
+
+            // Sync Data Points
+            visibleIndices.forEach(idx => {
+                currentYs[idx] = startYs[idx] + (targetYs[idx] - startYs[idx]) * eased;
+                const pt = document.getElementById(`point-${idx}`);
+                if (pt) pt.setAttribute('cy', currentYs[idx]);
+            });
+
+            // Sync Lines
+            lineElements.forEach(seg => {
+                seg.el.setAttribute('y1', currentYs[seg.idx1]);
+                seg.el.setAttribute('y2', currentYs[seg.idx2]);
+            });
+
+            // Sync Axis Sliding
+            allTicks.forEach(t => {
+                t.currentY = t.startY + (t.targetY - t.startY) * eased;
+                t.elLine.setAttribute('y1', t.currentY);
+                t.elLine.setAttribute('y2', t.currentY);
+                t.elText.setAttribute('y', t.currentY + 4.5);
+            });
+
+            if (p < 1) {
+                masterSyncTween = requestAnimationFrame(runSyncTween);
+            } else {
+                masterSyncTween = null;
+            }
+        }
+        masterSyncTween = requestAnimationFrame(runSyncTween);
+
+        // HANDLE OPACITIES & COLORS VIA STANDARD CSS CLASSES
+        visibleIndices.forEach((idx) => {
+            const pt = document.getElementById(`point-${idx}`);
+            if (isZoomed) {
+                pt.style.opacity = (idx < 3) ? 0 : 1;
+                pt.classList.remove('faded-point');
+            } else { 
+                pt.style.opacity = 1;
+                if(isElementFaded(step, idx)) pt.classList.add('faded-point');
+                else pt.classList.remove('faded-point');
+            }
+        });
+
+        lineElements.forEach((seg) => {
+            if (isZoomed) {
+                seg.el.classList.remove('faded-line');
+                if (seg.idx1 < 3 && seg.idx2 < 3) seg.el.style.opacity = 0;
+                else seg.el.style.opacity = 1;
+            } else {
+                seg.el.style.opacity = 1;
+                let isFaded = false;
+                if (step === 4) {
+                    isFaded = isElementFaded(step, seg.idx1) || isElementFaded(step, seg.idx2);
+                } else {
+                    isFaded = isElementFaded(step, seg.idx1) && isElementFaded(step, seg.idx2);
+                }
+
+                if(isFaded) seg.el.classList.add('faded-line');
+                else seg.el.classList.remove('faded-line');
+            }
         });
 
         document.querySelectorAll('.week-num').forEach(l => l.classList.remove('highlight-week'));
@@ -364,12 +661,32 @@
                 if(entry.target.id === 'block-1' && !hasPlayed) {
                     playIntro();
                 }
+                
+                // Content Box Activation
+                document.querySelectorAll('.text-block').forEach(b => b.classList.remove('active'));
                 entry.target.classList.add('active'); 
+                
+                // Update Navigation Dots
+                document.querySelectorAll('.nav-dot').forEach(dot => dot.classList.remove('active'));
+                const activeDot = document.querySelector(`.nav-dot[data-target="${entry.target.id}"]`);
+                if(activeDot) activeDot.classList.add('active');
+
                 if (introComplete) update(entry.target.id);
             } 
         });
     }, { root: document.getElementById('scroll-rail'), threshold: 0.6 });
     document.querySelectorAll('.text-block').forEach(b => obs.observe(b));
+
+    // --- NAV DOT CLICK LISTENER ---
+    document.querySelectorAll('.nav-dot').forEach(dot => {
+        dot.addEventListener('click', () => {
+            const targetId = dot.getAttribute('data-target');
+            const targetElement = document.getElementById(targetId);
+            if(targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    });
     
     window.onload = () => setTimeout(() => { if(!hasPlayed) playIntro(); }, 100);
 
