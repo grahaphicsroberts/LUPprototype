@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrollytelling Prototype - Copy Updates</title>
+    <title>Scrollytelling Prototype - Label Update</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #f8f9fa; font-family: "Myriad Pro", "Segoe UI", sans-serif; }
         .container { display: flex; height: 100vh; width: 100vw; }
@@ -18,7 +18,7 @@
             box-sizing: border-box;
         }
 
-        /* --- Global Dot Navigation --- */
+        /* --- Global Dot Navigation (8 Steps) --- */
         .scroll-nav {
             position: fixed;
             left: 30px;
@@ -53,16 +53,18 @@
             background: #eef1f5;
             padding: 4px;
             border-radius: 30px;
-            margin-bottom: 25px; 
+            margin-bottom: 15px; 
             box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            z-index: 20;
+            margin-top: auto; 
         }
         .toggle-btn {
             background: transparent;
             border: none;
-            padding: 8px 24px;
+            padding: 6px 20px;
             border-radius: 26px;
-            font-size: 14px;
-            font-weight: 800;
+            font-size: 13px;
+            font-weight: 700;
             color: #666;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -80,7 +82,17 @@
             background: rgba(255,255,255,0.6);
         }
 
-        .chart-card { width: 100%; max-width: 1150px; background: white; padding: 35px; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; overflow: hidden; }
+        .chart-card { 
+            width: 100%; 
+            max-width: 1150px; 
+            background: white; 
+            padding: 35px; 
+            border-radius: 8px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+            position: relative; 
+            overflow: hidden; 
+            margin-bottom: auto; 
+        }
         svg { width: 100%; height: auto; display: block; overflow: hidden; }
 
         /* --- Data Points Styles --- */
@@ -96,6 +108,24 @@
             fill: #ccc !important; 
             stroke: #fff !important;
             opacity: 0.3 !important; 
+        }
+
+        /* --- Pulse Animation --- */
+        #surge-pulse, #end-pulse {
+            fill: none;
+            stroke: #ff8c00;
+            stroke-width: 3px;
+            transform-box: fill-box;
+            transform-origin: center;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .active-pulse {
+            animation: ripple 2s infinite ease-out;
+        }
+        @keyframes ripple {
+            0% { transform: scale(1); opacity: 1; stroke-width: 3px; }
+            100% { transform: scale(4); opacity: 0; stroke-width: 0px; }
         }
 
         /* --- Trend Line Segments --- */
@@ -164,20 +194,54 @@
         .text-block.active .content-box { opacity: 1; border-left-color: #ff8c00; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .block-label { font-weight: 800; color: #ff8c00; font-size: 0.9rem; display: block; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
         .content-box p { line-height: 1.7; color: #444; margin: 0; font-size: 1.1rem; }
+        
+        /* New Step 1 Headline Styles */
+        .main-headline {
+            font-size: 28px;
+            font-weight: 900;
+            color: #ff8c00;
+            line-height: 1.2;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+        .main-subhead {
+            font-size: 1.15rem;
+            color: #444;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* --- Scroll Prompt --- */
+        .scroll-prompt {
+            display: flex;
+            align-items: center;
+            margin-top: 25px;
+            font-weight: 700;
+            font-size: 12px;
+            color: #ff8c00;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            animation: bounce 2s infinite;
+        }
+        .scroll-prompt svg { margin-left: 8px; width: 16px; height: 16px; }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(5px); }
+            60% { transform: translateY(3px); }
+        }
 
         @media (max-width: 768px) {
             .container { flex-direction: column; }
             .chart-viewport { flex: none; height: 50vh; width: 100%; padding: 15px 10px 10px 10px; border-bottom: 1px solid #ddd; }
-            .data-toggle { margin-bottom: 10px; }
-            .toggle-btn { padding: 6px 14px; font-size: 12px; }
-            .chart-card { padding: 10px; box-shadow: none; max-width: 100%; }
-            
-            /* Move Nav Dots to right side of viewport on mobile */
+            .data-toggle { margin-bottom: 5px; margin-top: 20px; }
+            .toggle-btn { padding: 4px 12px; font-size: 11px; }
+            .chart-card { padding: 5px; box-shadow: none; max-width: 100%; margin-top: 0; }
             .scroll-nav { left: auto; right: 15px; top: 25%; }
-            
             .rail { flex: none; height: 50vh; width: 100%; border-left: none; }
             .text-block { height: 50vh; padding: 0 20px; }
             .content-box { padding: 20px; font-size: 0.9rem; }
+            .main-headline { font-size: 22px; }
             .stat-large { font-size: 42px; }
             .callout-highlight { font-size: 28px; }
         }
@@ -193,6 +257,7 @@
     <div class="nav-dot" data-target="block-5"></div>
     <div class="nav-dot" data-target="block-6"></div>
     <div class="nav-dot" data-target="block-7"></div>
+    <div class="nav-dot" data-target="block-8"></div>
 </div>
 
 <div class="container">
@@ -231,14 +296,25 @@
                 <text id="tag-deep" class="threshold-tag" x="1120" y="395" style="fill: #ff8c00;">Deep Suppression (≤20 ng/dL)</text>
 
                 <g id="trend-segments-group"></g>
-                <g id="points-layer"></g>
+                <g id="points-layer">
+                    <circle id="surge-pulse" r="6" />
+                    <circle id="end-pulse" r="6" />
+                </g>
                 <g id="week-labels-group"></g>
 
                 <g id="overlay-b2" class="overlay-group">
+                    <text x="640" y="220" text-anchor="middle" class="callout-text" style="font-size: 26px; font-weight: 800; fill: #333;">
+                        <tspan x="640" dy="0">Lupron Depot delivers rapid castrate levels</tspan>
+                        <tspan x="640" dy="1.4em">followed by profound, sustained suppression</tspan>
+                    </text>
+                </g>
+
+                <g id="overlay-b3" class="overlay-group">
                     <text class="injection-label" x="183.4" y="105" text-anchor="start">1st Injection</text>
                     <text class="injection-label" x="635" y="105" text-anchor="start">2nd Injection</text>
                     <line x1="183.4" y1="110" x2="183.4" y2="140" style="stroke:#2c7bb6; stroke-width:2; fill:none;" />
                     <line x1="635" y1="110" x2="635" y2="140" style="stroke:#2c7bb6; stroke-width:2; fill:none;" />
+                    
                     <text x="409" y="220" text-anchor="middle" class="callout-text">
                         <tspan x="409" dy="0">Lupron Depot requires as few as</tspan>
                         <tspan x="409" dy="1.4em" class="callout-highlight">2 doses per year—</tspan>
@@ -248,12 +324,50 @@
                         <tspan x="409" dy="1.4em">testosterone suppression</tspan>
                         <tspan x="409" dy="1.4em">throughout each dosing cycle.</tspan>
                     </text>
+
+                    <rect x="705" y="190" width="350" height="160" rx="16" ry="16" fill="#ff8c00" style="opacity: 0.9;" />
+                    <text x="880" y="220" text-anchor="middle" class="callout-text" style="fill: white;">
+                        <tspan x="880" dy="0">Supported by real-world evidence,</tspan>
+                        <tspan x="880" dy="1.4em">healthcare providers can confidently</tspan>
+                        <tspan x="880" dy="1.4em">administer Lupron Depot knowing</tspan>
+                        <tspan x="880" dy="1.4em" class="callout-highlight" style="font-size: 28px; fill: white; font-weight: 900;">~9 in 10 patients adhered</tspan>
+                        <tspan x="880" dy="1.4em">to treatment at 3 years.</tspan>
+                    </text>
                 </g>
 
-                <g id="overlay-b3" class="overlay-group"><text x="220" y="80" style="font-size: 15px; font-weight: bold; fill: #ff8c00;"><tspan x="220" dy="1.2em">Temporary spike in testosterone</tspan><tspan x="220" dy="1.2em">expected with GnRH agonists.</tspan></text></g>
-                <g id="overlay-b4" class="overlay-group"><text class="bar-value-label" x="242" y="515">15.9 ng/dL</text><text class="bar-value-label" x="635" y="525">14.2 ng/dL</text><text class="stat-large" x="640" y="330" text-anchor="middle">93.4%</text><text class="stat-desc" x="640" y="355" text-anchor="middle"><tspan x="640" dy="0">of patients maintained testosterone below</tspan><tspan x="640" dy="1.4em">castrate levels from week 4 to 48 (n=148).</tspan></text></g>
-                <g id="overlay-b5" class="overlay-group"><text class="bar-value-label" x="1108" y="535">9.9 ng/dL</text><text class="stat-desc" x="640" y="310" text-anchor="middle">mean serum testosterone level at week 48 was</text><text class="stat-large" x="640" y="365" text-anchor="middle">9.9 ng/dL</text></g>
-                <g id="overlay-b7" class="overlay-group"><text class="stat-large" x="640" y="280" text-anchor="middle">94.1%</text><text class="stat-desc" x="640" y="305" text-anchor="middle">of patients had a deep response</text></g>
+                <g id="overlay-b4" class="overlay-group">
+                    <text x="220" y="80" style="font-size: 15px; font-weight: bold; fill: #ff8c00;">
+                        <tspan x="220" dy="1.2em">Temporary spike in testosterone</tspan>
+                        <tspan x="220" dy="1.2em">expected with GnRH agonists.</tspan>
+                    </text>
+                    
+                    <rect x="705" y="190" width="350" height="160" rx="16" ry="16" fill="#ff8c00" style="opacity: 0.9;" />
+                    <text x="880" y="220" text-anchor="middle" class="callout-text" style="fill: white;">
+                        <tspan x="880" dy="0">No large randomized clinical trials</tspan>
+                        <tspan x="880" dy="1.4em">with adjudicated events have shown</tspan>
+                        <tspan x="880" dy="1.4em">clinically meaningful differences</tspan>
+                        <tspan x="880" dy="1.4em">in cardiovascular risk between</tspan>
+                        <tspan x="880" dy="1.4em">GnRH agonists and antagonists.</tspan>
+                    </text>
+                </g>
+
+                <g id="overlay-b5" class="overlay-group"><text class="bar-value-label" x="242" y="515">15.9 ng/dL</text><text class="bar-value-label" x="635" y="525">14.2 ng/dL</text><text class="stat-large" x="640" y="330" text-anchor="middle">93.4%</text><text class="stat-desc" x="640" y="355" text-anchor="middle"><tspan x="640" dy="0">of patients maintained testosterone below</tspan><tspan x="640" dy="1.4em">castrate levels from week 4 to 48 (n=148).</tspan></text></g>
+                
+                <g id="overlay-b6" class="overlay-group">
+                    <text class="bar-value-label" x="1106.6" y="520" style="font-size: 26px;">9.9 ng/dL</text>
+                    <rect x="705" y="170" width="350" height="230" rx="16" ry="16" fill="#ff8c00" style="opacity: 0.9;" />
+                    <text x="880" y="200" text-anchor="middle" class="callout-text" style="fill: white;">
+                        <tspan x="880" dy="0">Backed by a proven safety profile</tspan>
+                        <tspan x="880" dy="1.4em">and 40 years of clinician experience,</tspan>
+                        <tspan x="880" dy="1.4em">Lupron Depot has no known drug–drug</tspan>
+                        <tspan x="880" dy="1.4em">interactions and works synergistically</tspan>
+                        <tspan x="880" dy="1.4em">with other advanced prostate cancer</tspan>
+                        <tspan x="880" dy="1.4em">treatments—creating opportunities</tspan>
+                        <tspan x="880" dy="1.4em">to optimize patient outcomes.</tspan>
+                    </text>
+                </g>
+
+                <g id="overlay-b8" class="overlay-group"><text class="stat-large" x="640" y="280" text-anchor="middle">94.1%</text><text class="stat-desc" x="640" y="305" text-anchor="middle">of patients had a deep response</text></g>
 
                 <text style="font-size: 16px; font-weight: bold; fill: #333;" transform="translate(50, 348) rotate(-90)" text-anchor="middle">Mean Serum Testosterone (ng/dL)</text>
                 <text style="font-size: 14px; font-weight: bold; fill: #666;" x="645" y="620" text-anchor="middle">WEEKS</text>
@@ -264,41 +378,58 @@
     <div class="rail" id="scroll-rail">
         <div class="text-block" id="block-1">
             <div class="content-box">
+                <div class="main-headline">A Legacy of Trust That Meets Today’s Clinical Needs.</div>
+                <p class="main-subhead">For long-term therapy, clinicians prioritize trust, evidence, and reliability. Lupron Depot URO is supported by 40 years of clinical experience, establishing the foundation for reliable management of advanced prostate cancer.</p>
+                <div class="scroll-prompt">
+                    Scroll to continue
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-block" id="block-2">
+            <div class="content-box">
                 <span class="block-label">A foundation of treatment</span>
                 <p>Achieving and maintaining deep, durable testosterone suppression is essential in the management of advanced prostate cancer. Lupron Depot delivers rapid castrate levels followed by profound, sustained suppression, supported by extensive clinical evidence across long‑acting depot formulations. Here is the 48-week clinical profile of 148 patients initiating therapy.</p>
             </div>
         </div>
-        <div class="text-block" id="block-2">
+
+        <div class="text-block" id="block-3">
             <div class="content-box">
                 <span class="block-label">Twice-Yearly Dosing</span>
                 <p>Lupron Depot requires as few as 2 doses per year, simplifying treatment schedules to strengthen patient adherence. Supported by real world evidence, ~9 in 10 patients adhered to treatment at 3 years.</p>
             </div>
         </div>
-        <div class="text-block" id="block-3">
+
+        <div class="text-block" id="block-4">
             <div class="content-box">
                 <span class="block-label">Expected Initial Testosterone Surge</span>
                 <p>As with all GnRH agonists, an initial, transient rise in testosterone—often referred to as the treatment <b>“flare”</b>—may occur shortly after starting therapy. This temporary increase is an expected physiologic response before testosterone levels decline rapidly with continued Lupron Depot treatment.</p>
             </div>
         </div>
-        <div class="text-block" id="block-4">
+
+        <div class="text-block" id="block-5">
             <div class="content-box">
                 <span class="block-label">SUSTAINED CONTROL</span>
                 <p>Following the expected initial surge, testosterone levels with Lupron Depot decline rapidly. Studies show over 93% of patients on Lupron Depot achieved testosterone suppression down to castrate levels within the first 30 days and throughout treatment.</p>
             </div>
         </div>
-        <div class="text-block" id="block-5">
+
+        <div class="text-block" id="block-6">
             <div class="content-box">
                 <span class="block-label">Durable Efficacy</span>
                 <p>Lupron Depot provides deep and sustained testosterone suppression, with mean levels remaining well below the castrate threshold throughout treatment. By the end of the 48‑week interval, mean serum testosterone reached <b>9.9 ng/dL</b>, reflecting continued profound suppression.</p>
             </div>
         </div>
-        <div class="text-block" id="block-6">
+
+        <div class="text-block" id="block-7">
             <div class="content-box">
                 <span class="block-label">Stability of Response</span>
                 <p>Rescaling to the <b>0–50 ng/dL range</b> highlights how Lupron Depot demonstrates consistent suppression across the dosing interval, with stable testosterone levels throughout the maintenance phase.</p>
             </div>
         </div>
-        <div class="text-block" id="block-7">
+
+        <div class="text-block" id="block-8">
             <div class="content-box">
                 <span class="block-label">Deep Testosterone Suppression</span>
                 <p>Lupron Depot delivers deep levels of testosterone suppression, achieving concentrations ≤20 ng/dL in the majority of patients. In this study, <b>94.1% of patients</b> reached deep suppression within this threshold.</p>
@@ -431,9 +562,9 @@
     zoomedVals.forEach(v => createTick(v, 'z'));
 
     function isElementFaded(step, idx) {
-        if (step === 3 && idx !== 1) return true;
-        if (step === 4 && idx < 3) return true;
-        if (step === 5 && idx !== 47) return true;
+        if (step === 4 && idx !== 1) return true;
+        if (step === 5 && idx < 3) return true;
+        if (step === 6 && idx !== 47) return true;
         return false;
     }
 
@@ -500,12 +631,32 @@
         if (!introComplete) return; 
 
         const step = parseInt(blockId.split('-')[1]);
-        const isZoomed = step >= 6;
-        const isDeep = step === 7;
+        const isZoomed = step >= 7;
+        const isDeep = step === 8;
 
         document.querySelectorAll('.overlay-group').forEach(g => g.classList.remove('visible'));
         const activeOverlay = document.getElementById(`overlay-b${step}`);
         if (activeOverlay) activeOverlay.classList.add('visible');
+
+        // PULSE VISIBILITY LOGIC (Shifted for new Step counts)
+        const surgePulse = document.getElementById('surge-pulse');
+        const endPulse = document.getElementById('end-pulse');
+
+        if (step === 4) {
+            surgePulse.classList.add('active-pulse');
+            surgePulse.style.opacity = 1;
+        } else {
+            surgePulse.classList.remove('active-pulse');
+            surgePulse.style.opacity = 0;
+        }
+
+        if (step === 6) {
+            endPulse.classList.add('active-pulse');
+            endPulse.style.opacity = 1;
+        } else {
+            endPulse.classList.remove('active-pulse');
+            endPulse.style.opacity = 0;
+        }
 
         const castrate = document.getElementById('castrate-highlight');
         const deep = document.getElementById('deep-suppression-highlight');
@@ -515,9 +666,9 @@
         const tDeep = document.getElementById('tag-deep');
         
         const injRects = document.querySelectorAll('.inj-gradient-rect');
-        injRects.forEach(r => r.style.opacity = (step === 2) ? 1 : 0);
+        injRects.forEach(r => r.style.opacity = (step === 3) ? 1 : 0); // Dosing was 2, now 3
 
-        if (step >= 4) {
+        if (step >= 5) { // Sustained Control was 4, now 5
             castrate.classList.add('zone-visible');
             if (isZoomed) {
                 castrate.setAttribute('y', 137.5); castrate.setAttribute('height', 422); castrate.classList.add('zone-zoom');
@@ -608,6 +759,22 @@
                 t.elText.setAttribute('y', t.currentY + 4.5);
             });
 
+            // Keep the pulse circle synced to point 1 (Surge)
+            const surgeIdx = 1;
+            const pulse = document.getElementById('surge-pulse');
+            if(pulse) {
+                pulse.setAttribute('cx', barData[surgeIdx].x + 8.42);
+                pulse.setAttribute('cy', currentYs[surgeIdx]);
+            }
+
+            // Keep the pulse circle synced to point 47 (End)
+            const endIdx = 47; 
+            const endPulse = document.getElementById('end-pulse');
+            if(endPulse) {
+                endPulse.setAttribute('cx', barData[endIdx].x + 8.42);
+                endPulse.setAttribute('cy', currentYs[endIdx]);
+            }
+
             if (p < 1) {
                 masterSyncTween = requestAnimationFrame(runSyncTween);
             } else {
@@ -637,7 +804,7 @@
             } else {
                 seg.el.style.opacity = 1;
                 let isFaded = false;
-                if (step === 4) {
+                if (step === 5 || step === 6) { // Adjusted so fading happens correctly on Step 5 and 6
                     isFaded = isElementFaded(step, seg.idx1) || isElementFaded(step, seg.idx2);
                 } else {
                     isFaded = isElementFaded(step, seg.idx1) && isElementFaded(step, seg.idx2);
@@ -649,7 +816,7 @@
         });
 
         document.querySelectorAll('.week-num').forEach(l => l.classList.remove('highlight-week'));
-        if (step === 2) [0, 24, 48].forEach(w => {
+        if (step === 3) [0, 24, 48].forEach(w => { // Dosing was 2, now 3
             const el = document.getElementById(`label-week-${w}`);
             if(el) el.classList.add('highlight-week');
         });
