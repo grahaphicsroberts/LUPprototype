@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scrollytelling Prototype - Label Update</title>
+    <title>Scrollytelling Prototype - Layout Refinements</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background-color: #f8f9fa; font-family: "Myriad Pro", "Segoe UI", sans-serif; }
         .container { display: flex; height: 100vh; width: 100vw; }
@@ -315,23 +315,14 @@
                     <line x1="183.4" y1="110" x2="183.4" y2="140" style="stroke:#2c7bb6; stroke-width:2; fill:none;" />
                     <line x1="635" y1="110" x2="635" y2="140" style="stroke:#2c7bb6; stroke-width:2; fill:none;" />
                     
-                    <text x="409" y="220" text-anchor="middle" class="callout-text">
-                        <tspan x="409" dy="0">Lupron Depot requires as few as</tspan>
-                        <tspan x="409" dy="1.4em" class="callout-highlight">2 doses per year—</tspan>
-                        <tspan x="409" dy="1.6em">simplifying treatment schedules</tspan>
-                        <tspan x="409" dy="1.4em">to strengthen patient adherence—</tspan>
-                        <tspan x="409" dy="1.4em">while maintaining deep and durable</tspan>
-                        <tspan x="409" dy="1.4em">testosterone suppression</tspan>
-                        <tspan x="409" dy="1.4em">throughout each dosing cycle.</tspan>
-                    </text>
-
-                    <rect x="705" y="190" width="350" height="160" rx="16" ry="16" fill="#ff8c00" style="opacity: 0.9;" />
-                    <text x="880" y="220" text-anchor="middle" class="callout-text" style="fill: white;">
-                        <tspan x="880" dy="0">Supported by real-world evidence,</tspan>
-                        <tspan x="880" dy="1.4em">healthcare providers can confidently</tspan>
-                        <tspan x="880" dy="1.4em">administer Lupron Depot knowing</tspan>
-                        <tspan x="880" dy="1.4em" class="callout-highlight" style="font-size: 28px; fill: white; font-weight: 900;">~9 in 10 patients adhered</tspan>
-                        <tspan x="880" dy="1.4em">to treatment at 3 years.</tspan>
+                    <text x="640" y="190" text-anchor="middle" class="callout-text">
+                        <tspan x="640" dy="0">Lupron Depot requires as few as</tspan>
+                        <tspan x="640" dy="1.6em" class="callout-highlight">2 doses per year—</tspan>
+                        <tspan x="640" dy="2.6em">simplifying treatment schedules</tspan>
+                        <tspan x="640" dy="1.6em">to strengthen patient adherence—</tspan>
+                        <tspan x="640" dy="1.6em">while maintaining deep and durable</tspan>
+                        <tspan x="640" dy="1.6em">testosterone suppression</tspan>
+                        <tspan x="640" dy="1.6em">throughout each dosing cycle.</tspan>
                     </text>
                 </g>
 
@@ -341,13 +332,17 @@
                         <tspan x="220" dy="1.2em">expected with GnRH agonists.</tspan>
                     </text>
                     
-                    <rect x="705" y="190" width="350" height="160" rx="16" ry="16" fill="#ff8c00" style="opacity: 0.9;" />
-                    <text x="880" y="220" text-anchor="middle" class="callout-text" style="fill: white;">
-                        <tspan x="880" dy="0">No large randomized clinical trials</tspan>
-                        <tspan x="880" dy="1.4em">with adjudicated events have shown</tspan>
-                        <tspan x="880" dy="1.4em">clinically meaningful differences</tspan>
-                        <tspan x="880" dy="1.4em">in cardiovascular risk between</tspan>
-                        <tspan x="880" dy="1.4em">GnRH agonists and antagonists.</tspan>
+                    <rect x="660" y="135" width="420" height="230" rx="12" ry="12" fill="#f0f2f5" stroke="#c02b2b" stroke-width="3" style="opacity: 0.95;" />
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#c02b2b" transform="translate(680, 147) scale(0.9)" />
+                    <text x="715" y="166" font-size="16" font-weight="900" fill="#c02b2b" text-transform="uppercase" letter-spacing="0.5">Cardiovascular Risk</text>
+                    <line x1="660" y1="185" x2="1080" y2="185" stroke="#d5d5d5" stroke-width="1" />
+                    
+                    <text x="870" y="225" text-anchor="middle" class="callout-text" style="fill: #333;">
+                        <tspan x="870" dy="0">No large randomized clinical trials</tspan>
+                        <tspan x="870" dy="1.6em">with adjudicated events have shown</tspan>
+                        <tspan x="870" dy="1.6em">clinically meaningful differences</tspan>
+                        <tspan x="870" dy="1.6em">in cardiovascular risk between</tspan>
+                        <tspan x="870" dy="1.6em">GnRH agonists and antagonists.</tspan>
                     </text>
                 </g>
 
@@ -355,15 +350,20 @@
                 
                 <g id="overlay-b6" class="overlay-group">
                     <text class="bar-value-label" x="1106.6" y="520" style="font-size: 26px;">9.9 ng/dL</text>
-                    <rect x="705" y="170" width="350" height="230" rx="16" ry="16" fill="#ff8c00" style="opacity: 0.9;" />
-                    <text x="880" y="200" text-anchor="middle" class="callout-text" style="fill: white;">
-                        <tspan x="880" dy="0">Backed by a proven safety profile</tspan>
-                        <tspan x="880" dy="1.4em">and 40 years of clinician experience,</tspan>
-                        <tspan x="880" dy="1.4em">Lupron Depot has no known drug–drug</tspan>
-                        <tspan x="880" dy="1.4em">interactions and works synergistically</tspan>
-                        <tspan x="880" dy="1.4em">with other advanced prostate cancer</tspan>
-                        <tspan x="880" dy="1.4em">treatments—creating opportunities</tspan>
-                        <tspan x="880" dy="1.4em">to optimize patient outcomes.</tspan>
+                    
+                    <rect x="660" y="115" width="420" height="285" rx="12" ry="12" fill="#f0f2f5" stroke="#c02b2b" stroke-width="3" style="opacity: 0.95;" />
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#c02b2b" transform="translate(680, 127) scale(0.9)" />
+                    <text x="715" y="146" font-size="16" font-weight="900" fill="#c02b2b" text-transform="uppercase" letter-spacing="0.5">Cardiovascular Risk</text>
+                    <line x1="660" y1="165" x2="1080" y2="165" stroke="#d5d5d5" stroke-width="1" />
+                    
+                    <text x="870" y="205" text-anchor="middle" class="callout-text" style="fill: #333;">
+                        <tspan x="870" dy="0">Backed by a proven safety profile</tspan>
+                        <tspan x="870" dy="1.6em">and 40 years of clinician experience,</tspan>
+                        <tspan x="870" dy="1.6em">Lupron Depot has no known drug–drug</tspan>
+                        <tspan x="870" dy="1.6em">interactions and works synergistically</tspan>
+                        <tspan x="870" dy="1.6em">with other advanced prostate cancer</tspan>
+                        <tspan x="870" dy="1.6em">treatments—creating opportunities</tspan>
+                        <tspan x="870" dy="1.6em">to optimize patient outcomes.</tspan>
                     </text>
                 </g>
 
@@ -638,7 +638,7 @@
         const activeOverlay = document.getElementById(`overlay-b${step}`);
         if (activeOverlay) activeOverlay.classList.add('visible');
 
-        // PULSE VISIBILITY LOGIC (Shifted for new Step counts)
+        // PULSE VISIBILITY LOGIC
         const surgePulse = document.getElementById('surge-pulse');
         const endPulse = document.getElementById('end-pulse');
 
@@ -666,9 +666,9 @@
         const tDeep = document.getElementById('tag-deep');
         
         const injRects = document.querySelectorAll('.inj-gradient-rect');
-        injRects.forEach(r => r.style.opacity = (step === 3) ? 1 : 0); // Dosing was 2, now 3
+        injRects.forEach(r => r.style.opacity = (step === 3) ? 1 : 0);
 
-        if (step >= 5) { // Sustained Control was 4, now 5
+        if (step >= 5) {
             castrate.classList.add('zone-visible');
             if (isZoomed) {
                 castrate.setAttribute('y', 137.5); castrate.setAttribute('height', 422); castrate.classList.add('zone-zoom');
@@ -804,7 +804,7 @@
             } else {
                 seg.el.style.opacity = 1;
                 let isFaded = false;
-                if (step === 5 || step === 6) { // Adjusted so fading happens correctly on Step 5 and 6
+                if (step === 5 || step === 6) { 
                     isFaded = isElementFaded(step, seg.idx1) || isElementFaded(step, seg.idx2);
                 } else {
                     isFaded = isElementFaded(step, seg.idx1) && isElementFaded(step, seg.idx2);
